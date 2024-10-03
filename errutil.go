@@ -15,8 +15,8 @@ Incidentally, [the error-inspection draft design proposal] suggests that [errors
 would have been very similar to [Find] if the Go team had cracked
 the parametric-polymorphism nut in time for [errors.As]'s inception in the
 standard library.
-In many cases, a call to [errors.As] can advantageously be refactored into a
-call to [Find].
+In many cases, a call to [errors.As] can advantageously be refactored to a call
+to [Find].
 
 [51945]: https://github.com/golang/go/issues/51945
 [56949]: https://github.com/golang/go/issues/56949
