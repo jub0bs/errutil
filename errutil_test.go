@@ -12,31 +12,6 @@ import (
 	"github.com/jub0bs/errutil"
 )
 
-// 	cases := []struct {
-// 		desc   string
-// 		target *simpleError
-// 	}{
-// 		{
-// 			desc:   "nil target",
-// 			target: nil,
-// 		}, {
-// 			desc:   "non-nil target",
-// 			target: new(simpleError),
-// 		},
-// 	}
-// 	for _, tc := range cases {
-// 		f := func(t *testing.T) {
-// 			var err error
-// 			got := errutil.As(err, tc.target)
-// 			if got {
-// 				const tmpl = "As(%v, %T(%v)): got true; want false"
-// 				t.Errorf(tmpl, err, tc.target, tc.target)
-// 			}
-// 		}
-// 		t.Run(tc.desc, f)
-// 	}
-// }
-
 func TestAsPanicsForNonNilErrAndNilTarget(t *testing.T) {
 	err := errors.New("oh no!")
 	var target *simpleError
