@@ -55,7 +55,7 @@ func TestAsTargetWiderThanError(t *testing.T) {
 		error
 	}
 	var _ timeouter = err
-	var target = new(timeouter)
+	target := new(timeouter)
 	match := errutil.As(err, target)
 	if !match {
 		const tmpl = "errutil.As(err, %[1]T(%[1]v)): got false; want true"
