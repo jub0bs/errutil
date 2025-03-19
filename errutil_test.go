@@ -13,7 +13,7 @@ import (
 )
 
 func TestAsPanicsForNonNilErrAndNilTarget(t *testing.T) {
-	err := errors.New("oh no!")
+	err := errors.New("oh no")
 	var target *simpleError
 	defer func() {
 		if r := recover(); r == nil {
@@ -277,7 +277,7 @@ var cases = []TestCase[simpleError]{
 		match:  false,
 	}, {
 		desc:   "no match",
-		err:    errors.New("oh no!"),
+		err:    errors.New("oh no"),
 		target: new(simpleError),
 	}, {
 		desc:   "simple match",
@@ -344,7 +344,7 @@ var cases = []TestCase[simpleError]{
 	}, {
 		desc: "joiner that contains non-nil and match",
 		err: joiner{
-			errors.New("oh no!"),
+			errors.New("oh no"),
 			simpleError{msg: "foo"},
 		},
 		target: new(simpleError),
@@ -354,7 +354,7 @@ var cases = []TestCase[simpleError]{
 		desc: "joiner that contains match and non-nil",
 		err: joiner{
 			simpleError{msg: "foo"},
-			errors.New("oh no!"),
+			errors.New("oh no"),
 		},
 		target: new(simpleError),
 		match:  true,
@@ -373,7 +373,7 @@ var cases = []TestCase[simpleError]{
 		err: joiner{
 			simpleError{msg: "foo"},
 			joiner{
-				errors.New("oh no!"),
+				errors.New("oh no"),
 				simpleError{msg: "bar"},
 				simpleError{msg: "baz"},
 			},
@@ -388,7 +388,7 @@ var cases = []TestCase[simpleError]{
 				simpleError{msg: "foo"},
 			},
 			joiner{
-				errors.New("oh no!"),
+				errors.New("oh no"),
 				wrapper{simpleError{msg: "bar"}},
 				simpleError{msg: "baz"},
 			},
@@ -403,7 +403,7 @@ var cases = []TestCase[simpleError]{
 				aser{msg: "foo", f: masqueradeAsSimpleError},
 			},
 			joiner{
-				errors.New("oh no!"),
+				errors.New("oh no"),
 				wrapper{aser{msg: "bar", f: masqueradeAsSimpleError}},
 				aser{msg: "baz", f: masqueradeAsSimpleError},
 			},
