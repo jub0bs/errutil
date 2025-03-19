@@ -104,7 +104,7 @@ func Find[T error](err error) (T, bool) {
 		return zero, false
 	}
 	var ptr *T
-	return find[T](err, &ptr)
+	return find(err, &ptr)
 }
 
 func find[T error](err error, ptr2 **T) (T, bool) {
@@ -133,7 +133,7 @@ func find[T error](err error, ptr2 **T) (T, bool) {
 				if err == nil {
 					continue
 				}
-				if x, ok := find[T](err, ptr2); ok {
+				if x, ok := find(err, ptr2); ok {
 					return x, true
 				}
 			}
