@@ -27,20 +27,21 @@ func TestAsPanicsForNonNilErrAndNilTarget(t *testing.T) {
 func TestAs(t *testing.T) {
 	for _, tc := range cases {
 		f := func(t *testing.T) {
-			match := errutil.As(tc.err, tc.target)
+			target := tc.makeTarget()
+			match := errutil.As(tc.err, target)
 			if match != tc.match {
 				const tmpl = "errutil.As(err, %[1]T(%[1]v)): got %t; want %t"
-				t.Fatalf(tmpl, tc.target, match, tc.match)
+				t.Fatalf(tmpl, target, match, tc.match)
 			}
 			if !match {
 				return
 			}
-			if got := *tc.target; got != tc.want {
+			if got := *target; got != tc.want {
 				t.Fatalf("*target: got %#v; want %#v", got, tc.want)
 			}
-			if match != errors.As(tc.err, tc.target) { // sanity check
+			if match != errors.As(tc.err, target) { // sanity check
 				const tmpl = "errutil.As(err, %[1]T(%[1]v)) !=  errors.As(err, %[1]T(%[1]v))"
-				t.Fatalf(tmpl, tc.target)
+				t.Fatalf(tmpl, target)
 			}
 		}
 		t.Run(tc.desc, f)
@@ -109,38 +110,6 @@ func ExampleAs_interface() {
 	}
 	// Output:
 	// Timed out: true
-}
-
-func BenchmarkAs(b *testing.B) {
-	for _, bc := range cases {
-		f := func(b *testing.B) {
-			b.ReportAllocs()
-			for range b.N {
-				errutil.As(bc.err, bc.target)
-			}
-		}
-		b.Run(bc.desc, f)
-	}
-}
-
-func BenchmarkAsAgainstErrorsPkg(b *testing.B) {
-	for _, bc := range cases {
-		f := func(b *testing.B) {
-			b.ReportAllocs()
-			for range b.N {
-				errors.As(bc.err, bc.target)
-			}
-		}
-		b.Run("v=errors/"+bc.desc, f)
-
-		f = func(b *testing.B) {
-			b.ReportAllocs()
-			for range b.N {
-				errutil.As(bc.err, bc.target)
-			}
-		}
-		b.Run("v=errutil/"+bc.desc, f)
-	}
 }
 
 func TestFind(t *testing.T) {
@@ -212,98 +181,89 @@ func ExampleFind_interface() {
 	// Timed out: true
 }
 
-func BenchmarkFind(b *testing.B) {
+func BenchmarkAll(b *testing.B) {
 	for _, bc := range cases {
 		f := func(b *testing.B) {
 			b.ReportAllocs()
 			for range b.N {
-				errutil.Find[simpleError](bc.err)
+				target := bc.makeTarget()
+				boolSink = errors.As(bc.err, target)
 			}
 		}
-		b.Run(bc.desc, f)
-	}
-}
-
-func BenchmarkFindAgainstErrorsPkg(b *testing.B) {
-	for _, bc := range cases {
-		f := func(b *testing.B) {
-			b.ReportAllocs()
-			for range b.N {
-				findErrorsPkg[simpleError](bc.err)
-			}
-		}
-		b.Run("v=errors/"+bc.desc, f)
+		b.Run("impl=errors.As/c="+bc.desc, f)
 
 		f = func(b *testing.B) {
 			b.ReportAllocs()
 			for range b.N {
-				errutil.Find[simpleError](bc.err)
+				target := bc.makeTarget()
+				boolSink = errutil.As(bc.err, target)
 			}
 		}
-		b.Run("v=errutil/"+bc.desc, f)
+		b.Run("impl=errutil.As/c="+bc.desc, f)
+
+		f = func(b *testing.B) {
+			b.ReportAllocs()
+			for range b.N {
+				simpleErrorSink, boolSink = errutil.Find[simpleError](bc.err)
+			}
+		}
+		b.Run("impl=errutil.Find/c="+bc.desc, f)
 	}
 }
 
-// A version of errors.Find implemented in terms of errors.As;
-// useful for benchmarks.
-func findErrorsPkg[T error](err error) (T, bool) {
-	if err == nil {
-		var zero T
-		return zero, false
-	}
-	target := new(T)
-	ok := errors.As(err, target)
-	return *target, ok
-}
+var (
+	boolSink        bool
+	simpleErrorSink simpleError
+)
 
 type TestCase[T error] struct {
-	desc   string
-	err    error
-	target *T
-	match  bool
-	want   T
+	desc       string
+	err        error
+	makeTarget func() *T
+	match      bool
+	want       T
 }
 
 var cases = []TestCase[simpleError]{
 	{
-		desc:   "nil error, nil target",
-		err:    nil,
-		target: nil,
-		match:  false,
+		desc:       "nil error, nil target",
+		err:        nil,
+		makeTarget: func() *simpleError { return nil },
+		match:      false,
 	}, {
-		desc:   "nil error, non-nil target",
-		err:    nil,
-		target: new(simpleError),
-		match:  false,
+		desc:       "nil error, non-nil target",
+		err:        nil,
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      false,
 	}, {
-		desc:   "no match",
-		err:    errors.New("oh no"),
-		target: new(simpleError),
+		desc:       "no match",
+		err:        errors.New("oh no"),
+		makeTarget: func() *simpleError { return new(simpleError) },
 	}, {
-		desc:   "simple match",
-		err:    simpleError{msg: "foo"},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		desc:       "simple match",
+		err:        simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
-		desc:   "aser",
-		err:    aser{msg: "foo", f: masqueradeAsSimpleError},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		desc:       "aser",
+		err:        aser{msg: "foo", f: masqueradeAsSimpleError},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
-		desc:   "wrapper that wraps nil error",
-		err:    wrapper{},
-		target: new(simpleError),
-		match:  false,
+		desc:       "wrapper that wraps nil error",
+		err:        wrapper{},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      false,
 	}, {
 		desc: "wrapper that contains match",
 		err: wrapper{
 			simpleError{msg: "foo"},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "deeply nested wrapper that contains match",
 		err: wrapper{
@@ -311,63 +271,63 @@ var cases = []TestCase[simpleError]{
 				wrapper{simpleError{msg: "foo"}},
 			},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "wrapper that contains aser",
 		err: wrapper{
 			aser{msg: "foo", f: masqueradeAsSimpleError},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
-		desc:   "empty joiner",
-		err:    joiner{},
-		target: new(simpleError),
-		match:  false,
+		desc:       "empty joiner",
+		err:        joiner{},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      false,
 	}, {
-		desc:   "joiner that contains nil",
-		err:    joiner{nil},
-		target: new(simpleError),
-		match:  false,
+		desc:       "joiner that contains nil",
+		err:        joiner{nil},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      false,
 	}, {
 		desc: "joiner that contains nil and match",
 		err: joiner{
 			nil,
 			simpleError{msg: "foo"},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "joiner that contains non-nil and match",
 		err: joiner{
 			errors.New("oh no"),
 			simpleError{msg: "foo"},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "joiner that contains match and non-nil",
 		err: joiner{
 			simpleError{msg: "foo"},
 			errors.New("oh no"),
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "joiner that contains two matches",
 		err: joiner{
 			simpleError{msg: "foo"},
 			simpleError{msg: "bar"},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "deeply nested joiner that contains non-nil and three matches",
 		err: joiner{
@@ -378,9 +338,9 @@ var cases = []TestCase[simpleError]{
 				simpleError{msg: "baz"},
 			},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "mix of wrappers and joiners",
 		err: joiner{
@@ -393,9 +353,9 @@ var cases = []TestCase[simpleError]{
 				simpleError{msg: "baz"},
 			},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
 		desc: "mix of wrappers and joiners that contains asers",
 		err: joiner{
@@ -408,14 +368,14 @@ var cases = []TestCase[simpleError]{
 				aser{msg: "baz", f: masqueradeAsSimpleError},
 			},
 		},
-		target: new(simpleError),
-		match:  true,
-		want:   simpleError{msg: "foo"},
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      true,
+		want:       simpleError{msg: "foo"},
 	}, {
-		desc:   "joiner that contains many false asers",
-		err:    joiner(slices.Repeat([]error{aser{msg: "foo"}}, 16)),
-		target: new(simpleError),
-		match:  false,
+		desc:       "joiner that contains many false asers",
+		err:        joiner(slices.Repeat([]error{aser{msg: "foo"}}, 16)),
+		makeTarget: func() *simpleError { return new(simpleError) },
+		match:      false,
 	},
 }
 

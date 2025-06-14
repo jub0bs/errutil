@@ -28,6 +28,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: jub0bs/errutil
   benchmark:
+    # Mostly to compare allocations;
+    # measurements of execution speed in GitHub Actions are unreliable.
     needs: test
     strategy:
       matrix:
@@ -60,22 +62,20 @@ jobs:
       - name: Run Benchmark (previous)
         run: |
           cd previous
-          go test -run '^$' -bench '^(BenchmarkAs|BenchmarkFind)$' -count 10 . -benchtime 10000x > benchmark.txt
+          go test -run '^$' -bench '^BenchmarkAll$' -count 10 . -benchtime 10000x > bench.out
       - name: Run Benchmark (new)
         run: |
           cd new
-          go test -run '^$' -bench '^(BenchmarkAs|BenchmarkFind)$' -count 10 . -benchtime 10000x > benchmark.txt
-      - name: Run benchstat
-        # Mostly to compare allocations;
-        # measurements of execution speed in GitHub Actions are unreliable.
+          go test -run '^$' -bench '^BenchmarkAll$' -count 10 . -benchtime 10000x > bench.out
+      - name: Run benchstat (old vs. new)
         run: |
-          benchstat previous/benchmark.txt new/benchmark.txt
-      - name: Run Benchmark (against standard library)
+          benchstat previous/bench.out new/bench.out
+      - name: Run benchstat (errors.As vs. errutil.As)
         run: |
-          cd new
-          go test -run '^$' -bench '^(BenchmarkAsAgainstErrorsPkg|BenchmarkFindAgainstErrorsPkg)$' -count 10 . -benchtime 10000x > benchmark.txt
-      - name: Run benchstat (against standard library)
-        # Mostly to compare allocations;
-        # measurements of execution speed in GitHub Actions are unreliable.
+          benchstat -col "/impl@(errors.As errutil.As)"  new/bench.out
+      - name: Run benchstat (errors.As vs. errutil.Find)
         run: |
-          benchstat -col "/v@(errors errutil)"  new/benchmark.txt
+          benchstat -col "/impl@(errors.As errutil.Find)"  new/bench.out
+      - name: Run benchstat (errutil.As vs. errutil.Find)
+        run: |
+          benchstat -col "/impl@(errutil.As errutil.Find)"  new/bench.out
