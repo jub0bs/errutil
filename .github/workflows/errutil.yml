@@ -75,7 +75,7 @@ jobs:
           benchstat -col "/impl@(errors.As errutil.As)"  new/bench.out
       - name: Run benchstat (errors.As vs. errutil.Find)
         run: |
-          benchstat -col "/impl@(errors.As errutil.Find)"  new/bench.out
+          benchstat -col "/impl@(errors.As errutil.Find)" new/bench.out
       - name: Run benchstat (errutil.As vs. errutil.Find)
         run: |
-          benchstat -col "/impl@(errutil.As errutil.Find)"  new/bench.out
+          benchstat -col "/impl@(errutil.As errutil.Find)" new/bench.out
