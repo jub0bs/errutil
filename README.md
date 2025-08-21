@@ -16,7 +16,8 @@ A collection of utility functions for working with [Go][golang] errors.
 go get github.com/jub0bs/errutil
 ```
 
-jub0bs/errutil requires Go 1.23.1 or above.
+jub0bs/errutil requires [Go 1.24.0][go1.24] or above. Note that it only
+[supports][release-policy] the two most recent minor versions of Go.
 
 ## Documentation
 
@@ -173,6 +174,8 @@ geomean                                                                         
 All source code is covered by the [MIT License][license].
 
 [as]: https://pkg.go.dev/errors#As
+[go1.24]: https://tip.golang.org/doc/go1.24
 [golang]: https://go.dev/
 [license]: https://github.com/jub0bs/errutil/blob/main/LICENSE
 [pkgsite]: https://pkg.go.dev/github.com/jub0bs/errutil
+[release-policy]: https://go.dev/doc/devel/release#policy
