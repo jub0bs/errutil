@@ -42,6 +42,11 @@ package errutil
 // different error type.
 //
 // As panics if err is not nil and target is nil.
+//
+// Note that an instantiation of the form As[error] constitutes a (harmless)
+// programming mistake, as it is never useful;
+// such a mistake is similar to passing a value of type *error as the second
+// argument of [errors.As], a mistake which is covered by a vet check.
 func As[T error](err error, target *T) bool {
 	if err == nil {
 		return false
@@ -98,6 +103,11 @@ func as[T error](err error, target *T) bool {
 //
 // An error type might provide an As method so it can be treated as if it were a
 // different error type.
+//
+// Note that an instantiation of the form Find[error] constitutes a (harmless)
+// programming mistake, as it is never useful;
+// such a mistake is similar to passing a value of type *error as the second
+// argument of [errors.As], a mistake which is covered by a vet check.
 func Find[T error](err error) (T, bool) {
 	if err == nil {
 		var zero T
