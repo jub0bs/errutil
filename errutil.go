@@ -23,44 +23,7 @@ package errutil
 // such a mistake is similar to passing a value of type *error as the second
 // argument of [errors.As], a mistake which is covered by a vet check.
 func As[T error](err error, target *T) bool {
-	if err == nil {
-		return false
-	}
-	if target == nil {
-		panic("errutil: target cannot be nil")
-	}
 	return as(err, target)
-}
-
-func as[T error](err error, target *T) bool {
-	for {
-		if x, ok := err.(T); ok {
-			*target = x
-			return true
-		}
-		if x, ok := err.(interface{ As(any) bool }); ok && x.As(target) {
-			return true
-		}
-		switch x := err.(type) {
-		case interface{ Unwrap() error }:
-			err = x.Unwrap()
-			if err == nil {
-				return false
-			}
-		case interface{ Unwrap() []error }:
-			for _, err := range x.Unwrap() {
-				if err == nil {
-					continue
-				}
-				if as(err, target) {
-					return true
-				}
-			}
-			return false
-		default:
-			return false
-		}
-	}
 }
 
 // Find finds the first error in err's tree that matches type T,
@@ -83,50 +46,8 @@ func as[T error](err error, target *T) bool {
 // programming mistake, as it is never useful;
 // such a mistake is similar to passing a value of type *error as the second
 // argument of [errors.As], a mistake which is covered by a vet check.
+//
+// If you can use Go 1.26 or above, simply rely on [errors.AsType] instead.
 func Find[T error](err error) (T, bool) {
-	if err == nil {
-		var zero T
-		return zero, false
-	}
-	var ptr *T
-	return find(err, &ptr)
-}
-
-func find[T error](err error, ptr2 **T) (T, bool) {
-	for {
-		x, ok := err.(T)
-		if ok {
-			return x, true
-		}
-		if x, ok := err.(interface{ As(any) bool }); ok {
-			if *ptr2 == nil {
-				*ptr2 = new(T)
-			}
-			if x.As(*ptr2) {
-				return **ptr2, true
-			}
-		}
-		switch x := err.(type) {
-		case interface{ Unwrap() error }:
-			err = x.Unwrap()
-			if err == nil {
-				var zero T
-				return zero, false
-			}
-		case interface{ Unwrap() []error }:
-			for _, err := range x.Unwrap() {
-				if err == nil {
-					continue
-				}
-				if x, ok := find(err, ptr2); ok {
-					return x, true
-				}
-			}
-			var zero T
-			return zero, false
-		default:
-			var zero T
-			return zero, false
-		}
-	}
+	return find[T](err)
 }

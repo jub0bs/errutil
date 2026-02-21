@@ -18,6 +18,9 @@
 // In many cases, a call to [errors.As] can advantageously be refactored to a
 // call to [Find].
 //
+// If you can use Go 1.26 or above, simply rely on [errors.AsType] instead of
+// [As] or [Find].
+//
 // [51945]: https://github.com/golang/go/issues/51945
 // [56949]: https://github.com/golang/go/issues/56949
 // [64771]: https://github.com/golang/go/issues/64771
