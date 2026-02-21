@@ -1,7 +1,7 @@
 # jub0bs/errutil
 
 [![tag](https://img.shields.io/github/tag/jub0bs/errutil.svg)](https://github.com/jub0bs/errutil/releases)
-![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.24.0-%23007d9c)
+![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.25.0-%23007d9c)
 [![Go Reference](https://pkg.go.dev/badge/github.com/jub0bs/errutil.svg)](https://pkg.go.dev/github.com/jub0bs/errutil)
 [![license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://github.com/jub0bs/errutil/raw/main/LICENSE)
 [![build](https://github.com/jub0bs/errutil/actions/workflows/errutil.yml/badge.svg)](https://github.com/jub0bs/errutil/actions/workflows/errutil.yml)
@@ -16,7 +16,7 @@ A collection of utility functions for working with [Go][golang] errors.
 go get github.com/jub0bs/errutil
 ```
 
-jub0bs/errutil requires [Go 1.24.0][go1.24] or above. Note that it only
+jub0bs/errutil requires [Go 1.25.0][go1.25] or above. Note that it only
 [supports][release-policy] the two most recent minor versions of Go.
 
 ## Documentation
@@ -174,7 +174,7 @@ geomean                                                                         
 All source code is covered by the [MIT License][license].
 
 [as]: https://pkg.go.dev/errors#As
-[go1.24]: https://tip.golang.org/doc/go1.24
+[go1.25]: https://tip.golang.org/doc/go1.25
 [golang]: https://go.dev/
 [license]: https://github.com/jub0bs/errutil/blob/main/LICENSE
 [pkgsite]: https://pkg.go.dev/github.com/jub0bs/errutil
